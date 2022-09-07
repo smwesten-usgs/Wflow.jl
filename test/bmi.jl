@@ -51,7 +51,7 @@ tomlpath = joinpath(@__DIR__, "sbm_config.toml")
             @test BMI.get_current_time(model) == 86400.0
             @test mean(BMI.get_value(model, "vertical.zi")) ≈ 276.2262553621772
             @test BMI.get_value_at_indices(model, "lateral.river.q", [1, 100, 5617]) ≈
-                [0.6211786703976018, 5.2195603551292695, 0.026173790374497755]
+                  [0.6211786703976018, 5.2195603551292695, 0.026173790374497755]
             BMI.set_value(model, "vertical.zi", fill(300.0, length(model.vertical.zi)))
             @test mean(BMI.get_value(model, "vertical.zi")) == 300.0
             BMI.set_value_at_indices(model, "vertical.zi", [1], [250.0])
