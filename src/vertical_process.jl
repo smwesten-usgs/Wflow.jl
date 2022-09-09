@@ -239,7 +239,13 @@ function infiltration(
 
     infiltexcess = (soilinf - max_infiltsoil) + (pathinf - max_infiltpath)
 
-    return infiltsoilpath, infiltsoil, infiltpath, soilinf, pathinf, infiltexcess
+    return infiltsoilpath,
+    infiltsoil,
+    infiltpath,
+    soilinf,
+    pathinf,
+    infiltexcess,
+    soilinfredu
 end
 
 """
