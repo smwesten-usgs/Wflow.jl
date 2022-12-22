@@ -12,7 +12,6 @@ function initialize_flextopo_model(config::Config)
     clock = Clock(config, reader)
     Δt = clock.Δt
 
-    reinit = get(config.model, "reinit", true)::Bool
     do_reservoirs = get(config.model, "reservoirs", false)::Bool
     do_lakes = get(config.model, "lakes", false)::Bool
     do_pits = get(config.model, "pits", false)::Bool
@@ -651,23 +650,7 @@ function initialize_flextopo_model(config::Config)
         FlextopoModel(),
     )
 
-    # read and set states in model object if reinit=true
-    if reinit == false
-        instate_path = input_path(config, config.state.path_input)
-        state_ncnames = ncnames(config.state)
-        set_states(instate_path, model, state_ncnames; type = Float, dimname = :classes)
-        # update kinematic wave volume for river and land domain
-        @unpack lateral = model
-        lateral.land.volume .= lateral.land.h .* lateral.land.width .* lateral.land.dl
-        lateral.river.volume .= lateral.river.h .* lateral.river.width .* lateral.river.dl
-
-        if do_lakes
-            # storage must be re-initialized after loading the state with the current
-            # waterlevel otherwise the storage will be based on the initial water level
-            lakes.storage .=
-                initialize_storage(lakes.storfunc, lakes.area, lakes.waterlevel, lakes.sh)
-        end
-    end
+    model = set_states(model)
 
     return model
 end
@@ -722,3 +705,28 @@ function update(model::Model{N,L,V,R,W,T}) where {N,L,V,R,W,T<:FlextopoModel}
 
     return model
 end
+
+function set_states(model::Model{N,L,V,R,W,T}) where {N,L,V,R,W,T<:FlextopoModel}
+    @unpack lateral, config = model
+    reinit = get(config.model, "reinit", true)::Bool
+    # read and set states in model object if reinit=true
+    if reinit == false
+        instate_path = input_path(config, config.state.path_input)
+        state_ncnames = ncnames(config.state)
+        set_states(instate_path, model, state_ncnames; type = Float, dimname = :classes)
+
+        # update kinematic wave volume for river and land domain
+        lateral.land.volume .= lateral.land.h .* lateral.land.width .* lateral.land.dl
+        lateral.river.volume .= lateral.river.h .* lateral.river.width .* lateral.river.dl
+
+        if do_lakes
+            # storage must be re-initialized after loading the state with the current
+            # waterlevel otherwise the storage will be based on the initial water level
+            lakes = lateral.river.lake
+            lakes.storage .=
+                initialize_storage(lakes.storfunc, lakes.area, lakes.waterlevel, lakes.sh)
+        end
+    end
+    return model
+end
+
