@@ -1,6 +1,14 @@
 # Basic Model Interface (BMI) implementation based on
 # https://github.com/Deltares/BasicModelInterface.jl
 
+
+# For the different Wflow model types the BMI is quite loosely implemented. For example all
+# struct fields can be exchanged and there is no distinction between input and output
+# variables. 
+# Information relevant to BMI could be added as metadata to the struct fields, this is
+# already done for units. TODO: Check if it is worthwile to extend this (for example grid
+# type, input or output variable etc.).
+
 # BMI grid type based on grid identifier
 const gridtype = Dict{Int,String}(
     0 => "unstructured",
@@ -8,10 +16,35 @@ const gridtype = Dict{Int,String}(
     2 => "unstructured",
     3 => "unstructured",
     4 => "unstructured",
+    5 => "scalar",
+    6 => "none",
 )
 
-# Mapping of grid identifier to a key, to get the active indices of the model domain.
-# See also function active_indices(network, key::Tuple).
+# A few model variables have a scalar grid type (constant and uniform value for the model
+# domain)
+const var_scalar_grid = [
+    "lateral.river.β",
+    "lateral.river.alpha_pow",
+    "lateral.land.β",
+    "lateral.land.alpha_pow",
+    "lateral.river.g",
+    "lateral.land.g",
+]
+
+# A few model variables (vector) have a none grid type, the list is required to filter 
+const var_none_grid = [
+    "vertical.kclass",
+    "vertical.classes",
+    "vertical.select_interception",
+    "vertical.select_hortonponding",
+    "vertical.select_hortonrunoff",
+    "vertical.select_rootzone",
+    "vertical.select_fast",
+    "vertical.select_slow",
+]
+
+# Mapping of grid identifier to a key, to get the active indices of the model domain for
+# unstuctured grid types. See also function active_indices(network, key::Tuple).
 const grids =
     Dict{Int,String}(0 => "reservoir", 1 => "lake", 2 => "river", 3 => "drain", 4 => "land")
 
@@ -33,6 +66,8 @@ function BMI.initialize(::Type{<:Model}, config_file)
         initialize_hbv_model(config)
     elseif modeltype == "sediment"
         initialize_sediment_model(config)
+    elseif modeltype == "flextopo"
+        initialize_flextopo_model(config)
     else
         error("unknown model type")
     end
@@ -111,6 +146,8 @@ function BMI.get_input_var_names(model::Model)
                 collect(string.(c, ".", fieldnames(typeof(param(model, c))))),
             )
         end
+        # delete entries where field is nothing (e.g. for model without lakes or reservoirs)
+        deleteat!(var_names, findall(x -> isnothing(Wflow.param(model, x)), var_names))
         return var_names
     else
         @warn("TOML file does not contain section [API] to extract model var names")
@@ -126,19 +163,28 @@ end
 
 function BMI.get_var_grid(model::Model, name::String)
     if name in BMI.get_input_var_names(model)
-        if occursin("reservoir", name)
-            0
-        elseif occursin("lake", name)
-            1
-        elseif occursin("river", name)
-            2
-        elseif occursin("drain", name)
-            3
+        split_name = split(name, ".")
+        param_type = typeof(param(model, name))
+        non_grid_false = isnothing(findfirst(occursin.(name, var_none_grid)))
+        if param_type <: AbstractVector && non_grid_false
+            if "reservoir" in split_name
+                0
+            elseif "lake" in split_name
+                1
+            elseif "river" in split_name
+                2
+            elseif "drain" in split_name
+                3
+            else
+                4
+            end
+        elseif name in var_scalar_grid
+            5
         else
-            4
+            6
         end
     else
-        error("Model variable $name not listed as input of output variable")
+        error("Model variable $name not listed as input or output variable")
     end
 end
 
@@ -239,14 +285,30 @@ end
 
 function BMI.get_grid_rank(model::Model, grid::Int)
     if grid in keys(gridtype)
-        return 2
+        if gridtype[grid] == "unstructured"
+            2
+        elseif gridtype[grid] == "scalar"
+            0
+        else
+            error("rank is not defined for grid type $grid ($gridtype[grid])")
+        end
     else
         error("unknown grid type $grid")
     end
 end
 
 function BMI.get_grid_shape(model::Model, grid::Int)
-    size(active_indices(model.network, symbols(grids[grid])), 1)
+    if grid in keys(gridtype)
+        if gridtype[grid] == "unstructured"
+            size(active_indices(model.network, symbols(grids[grid])), 1)
+        elseif gridtype[grid] == "scalar"
+            0
+        else
+            error("shape is not defined for grid type $grid ($gridtype[grid])")
+        end
+    else
+        error("unknown grid type $grid")
+    end
 end
 
 function BMI.get_grid_size(model::Model, grid::Int)
@@ -256,19 +318,35 @@ end
 function BMI.get_grid_x(model::Model, grid::Int)
     @unpack reader, config = model
     @unpack dataset = reader
-    sel = active_indices(model.network, symbols(grids[grid]))
-    inds = [sel[i][1] for i in eachindex(sel)]
-    x_nc = read_x_axis(dataset)
-    return x_nc[inds]
+    if grid in keys(gridtype)
+        if gridtype[grid] == "unstructured"
+            sel = active_indices(model.network, symbols(grids[grid]))
+            inds = [sel[i][1] for i in eachindex(sel)]
+            x_nc = read_x_axis(dataset)
+            return x_nc[inds]
+        else
+            error("grid_x is not defined for grid type $grid ($gridtype[grid])")
+        end
+    else
+        error("unknown grid type $grid")
+    end
 end
 
 function BMI.get_grid_y(model::Model, grid::Int)
     @unpack reader, config = model
     @unpack dataset = reader
-    sel = active_indices(model.network, symbols(grids[grid]))
-    inds = [sel[i][2] for i in eachindex(sel)]
-    y_nc = read_y_axis(dataset)
-    return y_nc[inds]
+    if grid in keys(gridtype)
+        if gridtype[grid] == "unstructured"
+            sel = active_indices(model.network, symbols(grids[grid]))
+            inds = [sel[i][2] for i in eachindex(sel)]
+            y_nc = read_y_axis(dataset)
+            return y_nc[inds]
+        else
+            error("grid_y is not defined for grid type $grid ($gridtype[grid])")
+        end
+    else
+        error("unknown grid type $grid")
+    end
 end
 
 function BMI.get_grid_node_count(model::Model, grid::Int)
