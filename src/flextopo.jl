@@ -1,22 +1,22 @@
-@get_units @with_kw struct FLEXTOPO{T,N}
+@get_units @bmi_land_grid @with_kw struct FLEXTOPO{T,N}
     # Model time step [s]
-    Δt::T | "s"
+    Δt::T | "s" | 6
     # Number of classes
-    nclass::Int | "-"
+    nclass::Int | "-" | 6
     # Number of cells
-    n::Int | "-"
+    n::Int | "-" | 6
     #dictionary with all possible functions for each store
-    dic_function::Dict
+    dic_function::Dict |"-"| 6
     #current class
-    kclass::Vector{Int64}
-    classes::Vector{String}
-    select_snow::Vector{String}
-    select_interception::Vector{String}
-    select_hortonponding::Vector{String}
-    select_hortonrunoff::Vector{String}
-    select_rootzone::Vector{String}
-    select_fast::Vector{String}
-    select_slow::Vector{String}
+    kclass::Vector{Int64} |"-"| 6
+    classes::Vector{String} |"-"| 6
+    select_snow::Vector{String} |"-"| 6
+    select_interception::Vector{String} |"-"| 6
+    select_hortonponding::Vector{String} |"-"| 6
+    select_hortonrunoff::Vector{String} |"-"| 6
+    select_rootzone::Vector{String} |"-"| 6
+    select_fast::Vector{String} |"-"| 6
+    select_slow::Vector{String} |"-"| 6
 
     #fraction of each class
     hrufrac::Vector{SVector{N,T}} | "-"

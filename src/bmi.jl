@@ -4,10 +4,8 @@
 
 # For the different Wflow model types the BMI is quite loosely implemented. For example all
 # struct fields can be exchanged and there is no distinction between input and output
-# variables. 
-# Information relevant to BMI could be added as metadata to the struct fields, this is
-# already done for units. TODO: Check if it is worthwile to extend this (for example grid
-# type, input or output variable etc.).
+# variables. The BMI grid identifier has been added to the Wflow structs (metadata). 
+# TODO: Check if it is worthwile to extend this (for example input or output variable etc.).
 
 # BMI grid type based on grid identifier
 const gridtype = Dict{Int,String}(
@@ -20,28 +18,17 @@ const gridtype = Dict{Int,String}(
     6 => "none",
 )
 
-# A few model variables have a scalar grid type (constant and uniform value for the model
-# domain)
-const var_scalar_grid = [
-    "lateral.river.β",
-    "lateral.river.alpha_pow",
-    "lateral.land.β",
-    "lateral.land.alpha_pow",
-    "lateral.river.g",
-    "lateral.land.g",
-]
-
-# A few model variables (vector) have a none grid type, the list is required to filter 
-const var_none_grid = [
-    "vertical.kclass",
-    "vertical.classes",
-    "vertical.select_interception",
-    "vertical.select_hortonponding",
-    "vertical.select_hortonrunoff",
-    "vertical.select_rootzone",
-    "vertical.select_fast",
-    "vertical.select_slow",
-]
+# Mapping of component to grid identifier function
+const grid_id_func = Dict{String,Function}(
+    "land" => bmi_land_grid,
+    "vertical" => bmi_land_grid,
+    "aquifer" => bmi_land_grid,
+    "recharge" => bmi_land_grid,
+    "river" => bmi_river_grid,
+    "lake" => bmi_lake_grid,
+    "reservoir" => bmi_res_grid,
+    "drain" => bmi_drain_grid,
+)
 
 # Mapping of grid identifier to a key, to get the active indices of the model domain for
 # unstuctured grid types. See also function active_indices(network, key::Tuple).
@@ -163,26 +150,9 @@ end
 
 function BMI.get_var_grid(model::Model, name::String)
     if name in BMI.get_input_var_names(model)
-        split_name = split(name, ".")
-        param_type = typeof(param(model, name))
-        non_grid_false = isnothing(findfirst(occursin.(name, var_none_grid)))
-        if param_type <: AbstractVector && non_grid_false
-            if "reservoir" in split_name
-                0
-            elseif "lake" in split_name
-                1
-            elseif "river" in split_name
-                2
-            elseif "drain" in split_name
-                3
-            else
-                4
-            end
-        elseif name in var_scalar_grid
-            5
-        else
-            6
-        end
+        s = split(name, ".")
+        component = s[end-1]
+        grid_id_func[component](param(model, join(s[1:end-1], ".")), Symbol(s[end]))
     else
         error("Model variable $name not listed as input or output variable")
     end

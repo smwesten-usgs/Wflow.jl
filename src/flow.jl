@@ -1,8 +1,8 @@
 
 abstract type SurfaceFlow end
 
-@get_units @with_kw struct SurfaceFlowRiver{T,R,L} <: SurfaceFlow
-    β::T | "-"                              # constant in Manning's equation
+@get_units @bmi_river_grid @with_kw struct SurfaceFlowRiver{T,R,L} <: SurfaceFlow
+    β::T | "-" | 5                          # constant in Manning's equation
     sl::Vector{T} | "m m-1"                 # Slope [m m⁻¹]
     n::Vector{T} | "s m-1/3"                # Manning's roughness [s m⁻⅓]
     dl::Vector{T} | "m"                     # Drain length [m]
@@ -16,10 +16,10 @@ abstract type SurfaceFlow end
     h::Vector{T} | "m"                      # Water level [m]
     h_av::Vector{T} | "m"                   # Average water level [m]
     bankfull_depth::Vector{T} | "m"         # Bankfull water level [m]
-    Δt::T | "s"                             # Model time step [s]
-    its::Int | "-"                          # Number of fixed iterations
+    Δt::T | "s"  | 6                        # Model time step [s]
+    its::Int | "-"  | 6                     # Number of fixed iterations
     width::Vector{T} | "m"                  # Flow width [m]
-    alpha_pow::T | "-"                      # Used in the power part of α
+    alpha_pow::T | "-"  | 5                 # Used in the power part of α
     alpha_term::Vector{T} | "-"             # Term used in computation of α
     α::Vector{T} | "s3/5 m1/5"              # Constant in momentum equation A = αQᵝ, based on Manning's equation
     cel::Vector{T} | "m s-1"                # Celerity of the kinematic wave
@@ -28,7 +28,7 @@ abstract type SurfaceFlow end
     lake_index::Vector{Int} | "-"           # map cell to 0 (no lake) or i (pick lake i in lake field)
     reservoir::R                            # Reservoir model struct of arrays
     lake::L                                 # Lake model struct of arrays
-    kinwave_it::Bool                        # Boolean for iterations kinematic wave
+    kinwave_it::Bool | 6                    # Boolean for iterations kinematic wave
 
     # TODO unclear why this causes a MethodError
     # function SurfaceFlow{T,R,L}(args...) where {T,R,L}
@@ -37,8 +37,8 @@ abstract type SurfaceFlow end
     # end
 end
 
-@get_units @with_kw struct SurfaceFlowLand{T} <: SurfaceFlow
-    β::T | "-"                              # constant in Manning's equation
+@get_units @bmi_land_grid @with_kw struct SurfaceFlowLand{T} <: SurfaceFlow
+    β::T | "-"  | 5                         # constant in Manning's equation
     sl::Vector{T} | "m m-1"                 # Slope [m m⁻¹]
     n::Vector{T} | "s m-1/3"                # Manning's roughness [s m⁻⅓]
     dl::Vector{T} | "m"                     # Drain length [m]
@@ -50,15 +50,15 @@ end
     volume::Vector{T} | "m3"                # Kinematic wave volume [m³] (based on water level h)
     h::Vector{T} | "m"                      # Water level [m]
     h_av::Vector{T} | "m"                   # Average water level [m]
-    Δt::T | "s"                             # Model time step [s]
-    its::Int | "-"                          # Number of fixed iterations
+    Δt::T | "s" | 6                         # Model time step [s]
+    its::Int | "-" | 6                      # Number of fixed iterations
     width::Vector{T} | "m"                  # Flow width [m]
-    alpha_pow::T | "-"                      # Used in the power part of α
+    alpha_pow::T | "-" | 5                  # Used in the power part of α
     alpha_term::Vector{T} | "-"             # Term used in computation of α
     α::Vector{T} | "s3/5 m1/5"              # Constant in momentum equation A = αQᵝ, based on Manning's equation
     cel::Vector{T} | "m s-1"                # Celerity of the kinematic wave
     to_river::Vector{T} | "m3 s-1"          # Part of overland flow [m³ s⁻¹] that flows to the river
-    kinwave_it::Bool                        # Boolean for iterations kinematic wave
+    kinwave_it::Bool | 6                    # Boolean for iterations kinematic wave
 end
 
 function initialize_surfaceflow_land(
@@ -411,13 +411,13 @@ function stable_timestep(sf::S) where {S<:SurfaceFlow}
     return Δt, its
 end
 
-@get_units @with_kw struct LateralSSF{T}
+@get_units @bmi_land_grid @with_kw struct LateralSSF{T}
     kh₀::Vector{T} | "m d-1"               # Horizontal hydraulic conductivity at soil surface [m d⁻¹]
     f::Vector{T} | "m-1"                   # A scaling parameter [m⁻¹] (controls exponential decline of kh₀)
     soilthickness::Vector{T} | "m"         # Soil thickness [m]
     θₛ::Vector{T} | "-"                     # Saturated water content (porosity) [-]
     θᵣ::Vector{T} | "-"                    # Residual water content [-]
-    Δt::T | "d"                            # model time step [d]
+    Δt::T | "d" | 6                        # model time step [d]
     βₗ::Vector{T} | "m m-1"                 # Slope [m m⁻¹]
     dl::Vector{T} | "m"                    # Drain length [m]
     dw::Vector{T} | "m"                    # Flow width [m]
@@ -479,21 +479,21 @@ function update(ssf::LateralSSF, network, frac_toriver)
     end
 end
 
-@get_units @with_kw struct GroundwaterExchange{T}
-    Δt::T | "d"                         # model time step [d]
+@get_units @bmi_land_grid @with_kw struct GroundwaterExchange{T}
+    Δt::T | "d" | 6                     # model time step [d]
     exfiltwater::Vector{T} | "m Δt-1"   # Exfiltration [m Δt⁻¹]  (groundwater above surface level, saturated excess conditions)
     zi::Vector{T} | "m"                 # Pseudo-water table depth [m] (top of the saturated zone)
     to_river::Vector{T} | "m3 d-1"      # Part of subsurface flow [m³ d⁻¹] that flows to the river
     ssf::Vector{T} | "m3 d-1"           # Subsurface flow [m³ d⁻¹]
 end
 
-@get_units @with_kw struct ShallowWaterRiver{T,R,L,F}
-    n::Int | "-"                            # number of cells
-    ne::Int | "-"                           # number of edges/links
-    g::T | "m s-2"                          # acceleration due to gravity
-    α::T | "-"                              # stability coefficient (Bates et al., 2010)
-    h_thresh::T | "m"                       # depth threshold for calculating flow
-    Δt::T | "s"                             # model time step [s]
+@get_units @bmi_river_grid @with_kw struct ShallowWaterRiver{T,R,L,F}
+    n::Int | "-"  | 6                       # number of cells
+    ne::Int | "-" | 6                       # number of edges/links
+    g::T | "m s-2"| 5                       # acceleration due to gravity
+    α::T | "-"  | 6                         # stability coefficient (Bates et al., 2010)
+    h_thresh::T | "m" | 6                   # depth threshold for calculating flow
+    Δt::T | "s" | 6                         # model time step [s]
     q::Vector{T} | "m3 s-1"                 # river discharge (subgrid channel)
     q0::Vector{T} | "m3 s-1"                # river discharge (subgrid channel) at previous time step
     q_av::Vector{T} | "m3 s-1"              # average river channel (+ floodplain) discharge [m³ s⁻¹]
@@ -519,7 +519,7 @@ end
     bankfull_volume::Vector{T} | "m3"       # bankfull volume
     bankfull_depth::Vector{T} | "m"         # bankfull depth
     zb::Vector{T} | "m"                     # river bed elevation
-    froude_limit::Bool | "-"                # if true a check is performed if froude number > 1.0 (algorithm is modified)
+    froude_limit::Bool | "-" | 6            # if true a check is performed if froude number > 1.0 (algorithm is modified)
     reservoir_index::Vector{Int} | "-"      # map cell to 0 (no reservoir) or i (pick reservoir i in reservoir field)
     lake_index::Vector{Int} | "-"           # map cell to 0 (no lake) or i (pick lake i in lake field)
     reservoir::R                            # Reservoir model struct of arrays
@@ -927,17 +927,17 @@ end
 # neigbors.
 const dirs = (:yd, :xd, :xu, :yu)
 
-@get_units @with_kw struct ShallowWaterLand{T}
-    n::Int | "-"                            # number of cells
+@get_units @bmi_land_grid @with_kw struct ShallowWaterLand{T}
+    n::Int | "-" | 6                        # number of cells
     xl::Vector{T} | "m"                     # cell length x direction
     yl::Vector{T} | "m"                     # cell length y direction
     xwidth::Vector{T} | "m"                 # effective flow width x direction (floodplain)
     ywidth::Vector{T} | "m"                 # effective flow width y direction (floodplain)
-    g::T | "m2 s-1"                         # acceleration due to gravity
-    θ::T | "-"                              # weighting factor (de Almeida et al., 2012)
-    α::T | "-"                              # stability coefficient (de Almeida et al., 2012)
-    h_thresh::T | "m"                       # depth threshold for calculating flow
-    Δt::T | "s"                             # model time step [s]
+    g::T | "m2 s-1" | 5                     # acceleration due to gravity
+    θ::T | "-"  | 6                         # weighting factor (de Almeida et al., 2012)
+    α::T | "-"  | 6                         # stability coefficient (de Almeida et al., 2012)
+    h_thresh::T | "m" | 6                   # depth threshold for calculating flow
+    Δt::T | "s" | 6                         # model time step [s]
     qy0::Vector{T} | "m3 s-1"               # flow in y direction at previous time step
     qx0::Vector{T} | "m3 s-1"               # flow in x direction at previous time step
     qx::Vector{T} | "m3 s-1"                # flow in x direction
@@ -950,7 +950,7 @@ const dirs = (:yd, :xd, :xu, :yu)
     runoff::Vector{T} | "m3 s-1"            # runoff from hydrological model
     h::Vector{T} | "m"                      # water depth of cell (for river cells the reference is the river bed elevation `zb`)
     z::Vector{T} | "m"                      # elevation of cell
-    froude_limit::Bool | "-"                # if true a check is performed if froude number > 1.0 (algorithm is modified)
+    froude_limit::Bool | "-" | 6            # if true a check is performed if froude number > 1.0 (algorithm is modified)
     rivercells::Vector{Bool} | "-"          # river cells
     h_av::Vector{T} | "m"                   # average water depth (for river cells the reference is the river bed elevation `zb`)
 end

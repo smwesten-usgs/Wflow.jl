@@ -19,7 +19,13 @@ using CFTime
 using Base.Threads
 using Glob
 
-@metadata get_units "mm Δt-1"
+@metadata get_units "mm Δt-1" #metdata for units
+# metadata for BMI grid identifier
+@metadata bmi_land_grid 4
+@metadata bmi_river_grid 2
+@metadata bmi_res_grid 0
+@metadata bmi_lake_grid 1
+@metadata bmi_drain_grid 3
 
 const BMI = BasicModelInterface
 const Float = Float64

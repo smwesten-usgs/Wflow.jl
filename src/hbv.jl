@@ -1,6 +1,6 @@
-@get_units @with_kw struct HBV{T}
-    Δt::T | "s"                     # Model time step [s]
-    n::Int | "-"                    # Number of cells
+@get_units @bmi_land_grid @with_kw struct HBV{T}
+    Δt::T | "s" | 6                 # Model time step [s]
+    n::Int | "-"   | 6              # Number of cells
     fc::Vector{T} | "mm"            # Field capacity [mm]
     betaseepage::Vector{T} | "-"    # Exponent in soil runoff generation equation [-]
     lp::Vector{T} | "-"             # Fraction of field capacity below which actual evaporation=potential evaporation [-]
