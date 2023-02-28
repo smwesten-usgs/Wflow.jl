@@ -43,15 +43,16 @@ function initialize_simple_reservoir(config, nc, inds_riv, nriv, pits, Δt)
     # read only reservoir data if reservoirs true
     # allow reservoirs only in river cells
     # note that these locations are only the reservoir outlet pixels
-    reslocs = ncread(
+    reslocs_2d = ncread(
         nc,
         config,
         "lateral.river.reservoir.locs";
         optional = false,
-        sel = inds_riv,
         type = Int,
         fill = 0,
     )
+
+    reslocs = reslocs_2d[inds_riv]
 
     # this holds the same ids as reslocs, but covers the entire reservoir
     rescoverage_2d = ncread(
@@ -146,14 +147,16 @@ function initialize_simple_reservoir(config, nc, inds_riv, nriv, pits, Δt)
     # all upstream flow goes to the river and flows into the reservoir
     pits[inds_res] .= true
 
-    n = length(resarea)
-    @info "Read `$n` reservoir locations."
-    sq = Vector{Union{SQ,Missing}}(missing, n)
-    res_outflowfunc = Vector{Union{Int,Missing}}(missing,n)
+    n_res = length(inds_res)
+    reslocs = reslocs_2d[inds_res]
+
+    @info "Read `$n_res` reservoir locations."
+    sq = Vector{Union{SQ,Missing}}(missing, n_res)
+    res_outflowfunc = Vector{Union{Int,Missing}}(missing,n_res)
     # reservoir CSV parameter files are expected in the same directory as path_static
     path = dirname(input_path(config, config.input.path_static))
-    for i = 1:n
-        resloc=reslocs[i]
+    for i = 1:n_res
+        resloc = reslocs[i]
         csv_path = joinpath(path, "res_sq_$resloc.csv")
         # Temporary fix to work with SQ-approach without provided ResOutflow-staticmap
         if isfile(csv_path)
@@ -170,7 +173,7 @@ function initialize_simple_reservoir(config, nc, inds_riv, nriv, pits, Δt)
             )
         end
     end
-
+    n = length(resarea)
     reservoirs = SimpleReservoir{Float}(
         Δt = Δt,
         demand = resdemand,
