@@ -17,7 +17,6 @@
         percfull = [NaN],
         demandrelease = [NaN],
         sq = [missing],
-        overflow = [NaN],
     )
 
     Wflow.update(res, 1, 100.0, 1, 86400.0)
@@ -49,7 +48,6 @@ datadir = joinpath(@__DIR__, "data")
         outflow = [NaN],
         percfull = [NaN],
         demandrelease = [NaN],
-        overflow = [NaN],
         sq = [Wflow.read_sq_csv(joinpath(datadir, "input", "res_sq_1.csv"))],
     )
 
@@ -60,7 +58,6 @@ datadir = joinpath(@__DIR__, "data")
     @test res.outflow[1] ≈ 40
     @test res.totaloutflow[1] ≈ 3.456e6
     @test res.volume[1] ≈ 1.82774e7
-    @test res.overflow[1] ≈ 0
 end
 
 @testset "reservoir SQ overflow" begin
@@ -81,7 +78,6 @@ end
             outflow = [NaN],
             percfull = [NaN],
             demandrelease = [NaN],
-            overflow = [NaN],
             sq = [Wflow.read_sq_csv(joinpath(datadir, "input", "res_sq_1.csv"))],
         )
 
@@ -92,7 +88,6 @@ end
     @test res.outflow[1] ≈ 92.19213
     @test res.totaloutflow[1] ≈ 7.9654e6
     @test res.volume[1] ≈ 2.5e7
-    @test res.overflow[1] ≈ 3.6454e6
 end
 
 @testset "natural lake" begin

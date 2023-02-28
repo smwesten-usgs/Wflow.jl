@@ -30,7 +30,6 @@ end
     evaporation::Vector{T}                              # average evaporation for reservoir area [mm Δt⁻¹]
     sq::Vector{Union{SQ,Missing}}                       # data for storage curve #TODO add to BMI?
     outflowfunc::Vector{Int} | "-"                      # type of reservoir outflow, 1: Simple Reservoir, 2: Volume-based Outflow approach (SQ) #TODO add to BMI?
-    overflow::Vector{T} | "m3"                          # overflow at reservoir [m³]
 
     function SimpleReservoir{T}(args...) where {T}
         equal_size_vectors(args)
@@ -190,7 +189,6 @@ function initialize_simple_reservoir(config, nc, inds_riv, nriv, pits, Δt)
         demandrelease = fill(mv, n),
         precipitation = fill(mv, n),
         evaporation = fill(mv, n),
-        overflow = fill(mv, n),
     )
 
     return reservoirs,
@@ -255,7 +253,6 @@ function update(res::SimpleReservoir, i, inflow, doy, timestepsecs)
     res.demandrelease[i] = demandrelease / timestepsecs
     res.percfull[i] = vol / res.maxvolume[i]
     res.volume[i] = vol
-    res.overflow[i] = overflow_q
 
     return res
 end
