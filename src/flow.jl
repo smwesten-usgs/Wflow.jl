@@ -295,7 +295,7 @@ function update(
                         # run reservoir model and copy reservoir outflow to inflow (qin) of
                         # downstream river cell
                         i = sf.reservoir_index[v]
-                        update(sf.reservoir, i, sf.q[v] + inflow_wb[v], adt)
+                        update(sf.reservoir, i, sf.q[v] + inflow_wb[v], doy, adt)
 
                         downstream_nodes = outneighbors(graph, v)
                         n_downstream = length(downstream_nodes)
@@ -618,6 +618,7 @@ function shallowwater_river_update(
                 sw.reservoir,
                 v,
                 sum_at(sw.q0, links_at_node.src[i]) + inflow_wb[i] + sw.inflow_wb[i],
+                doy,
                 Δt,
             )
             sw.q[i] = sw.reservoir.outflow[v]
