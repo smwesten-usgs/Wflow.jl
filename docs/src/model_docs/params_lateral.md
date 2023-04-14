@@ -50,7 +50,7 @@ bankfull_depth = "wflow_riverdepth"
 | `reservoir_index`   |  map cell to 0 (no reservoir) or i (pick reservoir i in reservoir field) | - | - |
 | `lake_index`   |  map cell to 0 (no lake) or i (pick lake i in lake field) | - | - |
 | `reservoir` [^2]    | an array of reservoir models `SimpleReservoir` | - | - |
-| `lake` [^2]    | an array of lake models `NaturalLake` | - | - |
+| `lake` [^2]    | an array of lake models `Lake` | - | - |
 | `kinwave_it`   | boolean for kinematic wave iterations | - | false |
 
 ### [Reservoirs](@id reservoir_params)
@@ -73,29 +73,30 @@ locs = "wflow_reservoirlocs"
 |  parameter | description  	        | unit | default |
 |:---------------| --------------- | ---------------------- | ----- |
 | **`area`**        | area | m``^2`` | - |
-| **`demandrelease`** ( `demand`) | minimum (environmental) flow released from reservoir  | m``^3`` s``^{-1}``| - |
+| **`demand`**  | minimum (environmental) flow requirement downstream of the reservoir | m``^3`` s``^{-1}``| - |
 | **`maxrelease`** | maximum amount that can be released if below spillway | m``^3`` s``^{-1}`` | - |
 | **`maxvolume`** | maximum storage (above which water is spilled) | m``^3`` | - |
 | **`targetfullfrac`** | target fraction full (of max storage)| -        | - |
 | **`targetminfrac`** | target minimum full fraction (of max storage) | -  | - |
+| `demandrelease`| minimum (environmental) flow released from reservoir  | m``^3`` s``^{-1}``| - |
 | `Δt`             | model time step     | s | - |
 | `volume`             | volume     | m``^3`` | - |
 | `inflow`             | total inflow into reservoir | m``^3`` | - |
 | `outflow`             | outflow into reservoir | m``^3`` s``^{-1}`` | - |
 | `totaloutflow`        | total outflow into reservoir | m``^3`` | - |
 | `percfull`             | fraction full (of max storage) | - | - |
-| `precipitation`             | outflow into reservoir | mm Δt⁻¹ | - |
-| `evaporation`             | outflow into reservoir | mm Δt⁻¹ | - |
+| `precipitation`             | average precipitation for reservoir area | mm Δt⁻¹ | - |
+| `evaporation`             | average evaporation for reservoir area | mm Δt⁻¹ | - |
 
 ### [Lakes](@id lake_params)
-The Table below shows the parameters (fields) of struct `NaturalLake`, including a
-description of these parameters, the unit, and default value if applicable. The parameters
-in bold represent model parameters that can be set through static input data (netCDF), and
-can be listed in the TOML configuration file under `[input.lateral.river.lake]`, to map the
+The Table below shows the parameters (fields) of struct `Lake`, including a description of
+these parameters, the unit, and default value if applicable. The parameters in bold
+represent model parameters that can be set through static input data (netCDF), and can be
+listed in the TOML configuration file under `[input.lateral.river.lake]`, to map the
 internal model parameter to the external netCDF variable.
 
 Two parameters lake coverage `areas` and the outlet of lakes (unique id) `locs` that are not
-part of the `NaturalLake` struct are also required, and can be set as follows through the
+part of the `Lake` struct are also required, and can be set as follows through the
 TOML file:
 
 ```toml
@@ -119,6 +120,7 @@ locs = "wflow_lakelocs"
 | `Δt`             | model time step     | s |  - |
 | `inflow` | total inflow to the lake | m``^3``  | - |
 | `storage` | storage lake | m``^3``  | - |
+| `maxstorage`| maximum storage lake with rating curve type 1 | m``^3``  | - |
 | `outflow` | outflow lake | m``^3`` s``^{-1}``  | - |
 | `totaloutflow` | total outflow lake | m``^3``  | - |
 | `precipitation` | average precipitation for lake area | mm Δt⁻¹  | - |
@@ -164,9 +166,15 @@ bankfull_elevation = "RiverZ"
 bankfull_depth = "RiverDepth"
 ```
 
+When floodplain routing (parameter `floodplain`) is included as part of local inertial river
+flow, parameter `q_av` represents the total average discharge of the river channel and
+floodplain routing, and parameter `q_channel_av` represents average river channel discharge.
+Otherwise parameters `q_av` and `q_channel_av` represent both average river channel
+discharge (are equal).
+
 |  parameter  | description  	  | unit  | default |
-|:--------------- | ------------------| ----- | -------- |
-| **`mannings_n`**    |  Manning's roughness at edge/link| s m``^{-\frac{1}{3}}`` | 0.036 |
+|:--------------- | ------------------| ------- | ------ |
+| **`mannings_n`** (`n`) |  Manning's roughness | s m``^{-\frac{1}{3}}`` | 0.036 |
 | **`width`**    |  river width | m | - |
 | `zb`    |  river bed elevation | m | - |
 | **`length`**    |  river length | m | - |
@@ -177,8 +185,10 @@ bankfull_depth = "RiverDepth"
 | `h_thresh`    |  depth threshold for calculating flow | m | 0.001 |
 | `Δt`    |  model time step | s | - |
 | `q`    |  river discharge (subgrid channel) | m``^3`` s``^{-1}`` | - |
-| `q_av`    |  average river discharge (subgrid channel) | m``^3`` s``^{-1}`` | - |
+| `q_av`    |  average river channel (+ floodplain) discharge | m``^3`` s``^{-1}`` | - |
+| `q_channel_av` | average river channel discharge | m``^3`` s``^{-1}`` | - |
 | `zb_max`    | maximum channel bed elevation | m | - |
+| `mannings_n_sq` | Manning's roughness squared at edge/link | (s m``^{-\frac{1}{3}}``)``^2`` | - |
 | `h`    | water depth | m | - |
 | `η_max`    | maximum water elevation | m | - |
 | `hf`    | water depth at edge/link | m | - |
@@ -186,7 +196,7 @@ bankfull_depth = "RiverDepth"
 | `length_at_link`    | river length at edge/link | m | - |
 | `width_at_link`    | river width at edge/link | m | - |
 | `a`    | flow area at edge/link | m``^2`` | - |
-| `r`    | wetted perimeter at edge/link | m | - |
+| `r`    | hydraulic radius at edge/link | m | - |
 | `volume`    | river volume | m``^3`` | - |
 | `error`    | error volume | m``^3`` | - |
 | `inwater`    | lateral inflow | m``^3`` s``^{-1}`` | - |
@@ -197,7 +207,50 @@ bankfull_depth = "RiverDepth"
 | `reservoir_index`   |  map cell to 0 (no reservoir) or i (pick reservoir i in reservoir field) | - | - |
 | `lake_index`   |  map cell to 0 (no lake) or i (pick lake i in lake field) | - | - |
 | `reservoir`    | an array of reservoir models `SimpleReservoir` | - | - |
-| `lake` | an array of lake models `NaturalLake` | - | - |
+| `lake` | an array of lake models `Lake` | - | - |
+| `floodplain` | optional 1D floodplain routing `FloodPlain` | - | - |
+
+### [1D floodplain](@id local-inertial_floodplain_params)
+The Table below shows the parameters (fields) of struct `FloodPlain` (part of struct
+`ShallowWaterRiver`), including a description of these parameters, the unit, and default
+value if applicable. The parameters in bold represent model parameters that can be set
+through static input data (netCDF), and can be listed in the TOML configuration file under
+`[input.lateral.river.floodplain]`, to map the internal model parameter to the external
+netCDF variable.
+
+|  parameter  | description  	  | unit  | default |
+|:--------------- | ------------------| ----- | -------- |
+| **`profile`**   |  Floodplain profile `FloodPlainProfile` | | |
+| **`mannings_n`** (`n`)    |  Manning's roughness for the floodplain | s m``^{-\frac{1}{3}}`` | 0.072 |
+| `mannings_n_sq` | Manning's roughness squared at edge/link | (s m``^{-\frac{1}{3}}``)``^2`` | - |
+| `volume`    | flood volume | m``^3`` | - |
+| `h`    | flood depth | m | - |
+| `h_av`    | average flood depth | m | - |
+| `error` | | error volume | m``^3`` | - |
+| `a`    | flow area at edge/link | m``^2`` | - |
+| `r`    | hydraulic radius at edge/link | m | - |
+| `hf`    | flood depth at edge/link | m | - |
+| `q0`  |  discharge at previous time step| m``^3`` s``^{-1}`` | - |
+| `q`    |  discharge | m``^3`` s``^{-1}`` | - |
+| `q_av`    |  average discharge | m``^3`` s``^{-1}`` | - |
+
+The floodplain profile `FloodPlainProfile` contains the following parameters:
+
+|  parameter  | description  	  | unit  | default |
+|:--------------- | ------------------| ----- | -------- |
+| **`depth`** (`flood_depth`) |  flood depths | m | - |
+| **`volume`**    |  cumulative flood volume (per flood depth) | m``^3`` | - |
+|  `width`   |  cumulative floodplain width (per flood depth) | m | - |
+|  `a`   |  cumulative floodplain flow area (per flood depth) | m``^2`` | - |
+|  `p`   |  cumulative floodplain wetted perimeter (per flood depth) | m | - |
+
+The floodplain volumes (per flood depth interval) can be set as follows through the TOML
+file:
+
+```toml
+[input.lateral.river.floodplain]
+volume = "floodplain_volume"
+```
 
 ### [Overland flow](@id local-inertial_land_params)
 The Table below shows the parameters (fields) of struct `ShallowWaterLand`, including a
@@ -205,6 +258,14 @@ description of these parameters, the unit, and default value if applicable. The 
 in bold represent model parameters that can be set through static input data (netCDF), and
 can be listed in the TOML configuration file under `[input.lateral.land]`, to map the
 internal model parameter to the external netCDF variable.
+
+The mannings roughness (for the computation of `mannings_n_sq`) should be provided as
+follows in the TOML file:
+
+```toml
+[input.lateral.land]
+n = "n_land" # mannings roughness
+```
 
 |  parameter  | description  	  | unit  | default |
 |:--------------- | ------------------| ----- | -------- |
@@ -224,12 +285,12 @@ internal model parameter to the external netCDF variable.
 | `qy`  |  flow in y direction | m``^3`` s``^{-1}`` | - |
 | `zx_max`  |  maximum cell elevation (x direction) | m | - |
 | `zy_max`  |  maximum cell elevation (y direction) | m | - |
-| **`mannings_n`**  |  Manning's roughness | s m``^{-\frac{1}{3}}`` | 0.072 |
+| `mannings_n_sq` |  Manning's roughness squared | s m``^{-\frac{1}{3}}`` | based on 0.072 |
 | `volume`  |  total volume of cell (including river volume for river cells) | m``^3`` | - |
 | `error`  |  error volume | m``^3`` | - |
 | `runoff`  |  runoff from hydrological model | m``^3`` s``^{-1}`` | - |
 | `h` |  water depth of cell | m | - |
-| **`z`**  |  elevation of cell | m | - |
+| **`z`** (`elevation`)  |  elevation of cell | m | - |
 | `froude_limit`  |  if true a check is performed if froude number > 1.0 (algorithm is modified)| - | - |
 | `rivercells`  |  river cells| - | - |
 | `h_av` | average water depth| m | - |
@@ -278,9 +339,7 @@ altitude = "wflow_dem"
 | `area`          | cell area    | m``^2`` | - |
 | `head`          | groundwater head     | m | - |
 | `conductance`          | conductance    | m``^2`` d``^{-1}`` | - |
-| `exp_conductivity` | flag wether to use exponential decay of conductivity | - | false |
 | `f` | factor controlling the reduction of reference horizontal conductivity | - | 3.0 |
-| `k` | actual horizontal conductivity |  m d``^{-1}``s | - |
 
 ### Constant Head
 The Table below shows the parameters (fields) of struct `ConstantHead`, including a

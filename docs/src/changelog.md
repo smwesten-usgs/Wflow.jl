@@ -5,7 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [unreleased]
+
+### Fixed
+- `BMI.get_time_units` now gets called on the model rather than the type, like all other BMI
+  functions, except `BMI.initialize`. Also it returns "s" instead of "seconds since
+  1970-01-01T00:00:00", in line with the BMI specification.
+
+### Changed
+- The time values returned in the BMI interface are no longer in seconds since 1970, but in
+  seconds since the model start time. This is more in line with standard BMI practices.
+
+### Added
+- For (regulated) lakes with rating curve of type 1 (H-Q table), lake `storage` above the
+  `maximumstorage` (based on maximum water level from the H-Q table) is spilled
+  instantaneously (overflow) from the lake.
+
+## v0.6.3 - 2023-03-01
 
 ### Fixed
 - Removed error when `_FillValue` is present in the time dimension of the forcing NetCDF
@@ -25,9 +41,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Show total duration of simulation in the log file (info), and show the current time at
   execution of each timestep (debug).
-- Support for exponential decline in horizontal conductivity in the sbm_gwf concept. This can
-  be enabled using the `exp_conductivity` flag, which exponentially reduces the `kh0` (or
-  `conductivity`) based on the value of `gwf_f` to the actual horizontal conductivity (`k`)
+- Support for exponential decline in horizontal conductivity in the sbm\_gwf concept. This can
+  be enabled using the `conductivity_profile` setting (either "uniform" or "exponential"). If
+  set to "exponential", it exponentially reduces the `kh0` (or `conductivity`) based on the
+  value of `gwf_f` to the actual horizontal conductivity (`k`).
+- An optional 1D floodplain schematization for the river flow inertial model, based on
+  provided flood volumes as a function of flood depth per river cell. See also the following
+  sections: [SBM + Local inertial river and floodplain](@ref) and [River and floodplain
+  routing](@ref) for a short description, and the following section for associated [model
+  parameters](@ref local-inertial_floodplain_params).
 
 ## v0.6.2 - 2022-09-01
 

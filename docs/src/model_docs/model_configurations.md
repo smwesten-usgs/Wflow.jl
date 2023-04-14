@@ -45,14 +45,16 @@ lateral.river.lake => struct NaturalLake{T} # optional
 lateral.river.reservoir => struct SimpleReservoir{T} # optional
 ```
 
-### SBM + Local inertial river
+### SBM + Local inertial river and floodplain
 By default the model type `sbm` uses the kinematic wave approach for river flow. There is
-also the option to use the local inertial model for river flow, by providing the following
-in the TOML file:
+also the option to use the local inertial model for river flow with an optional 1D
+floodplain schematization (routing is done separately for the river channel and floodplain),
+by providing the following in the TOML file:
 
 ```toml
 [model]
-river_routing = "local-inertial"
+river_routing = "local-inertial"    # optional, default is "kinematic-wave"
+floodplain_1d = true                # optional, default is false
 ```
 
 Only the mapping for the river component changes, as shown below. For an explanation about
@@ -91,6 +93,20 @@ wflow\_sbm model. For the subsurface domain, an unconfined aquifer with groundwa
 four directions (adjacent cells) is used. This is described in more detail in the section
 [Groundwater flow](@ref lateral_gwf).
 
+```toml
+[model]
+type = "sbm_gwf"
+
+[input.lateral.subsurface]
+ksathorfrac = "KsatHorFrac"
+conductivity = "conductivity"
+specific_yield = "specific_yield"
+exfiltration_conductance = "exfilt_cond"
+infiltration_conductance = "infilt_cond"
+river_bottom = "river_bottom"
+conductivity_profile = "exponential"
+gwf_f.value = 3.0
+```
 Below the mapping for this wflow\_sbm model (type `sbm_gwf`) to the vertical SBM concept
 (instance of `struct SBM`) and the different lateral concepts. For an explanation about the
 type parameters between curly braces after the `struct` name see the section on model parameters.
