@@ -22,6 +22,7 @@ const gridtype = Dict{Int,String}(
 const grid_id_func = Dict{String,Function}(
     "land" => bmi_land_grid,
     "vertical" => bmi_land_grid,
+    "subsurface" => bmi_land_grid,
     "aquifer" => bmi_land_grid,
     "recharge" => bmi_land_grid,
     "river" => bmi_river_grid,
