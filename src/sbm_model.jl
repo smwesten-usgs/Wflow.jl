@@ -146,6 +146,7 @@ function initialize_sbm_model(config::Config)
             ssfin = fill(mv, n),
             ssfmax = ((kh₀ .* βₗ) ./ f) .* (1.0 .- exp.(-f .* soilthickness)),
             to_river = zeros(n),
+            volume = (sbm.θₛ .- sbm.θᵣ) .* (soilthickness .- zi) .* (xl .* yl),
         )
     else
         # when the SBM model is coupled (BMI) to a groundwater model, the following
@@ -389,7 +390,7 @@ function initialize_sbm_model(config::Config)
         )
         set_states(instate_path, model, state_ncnames; type = Float, dimname = :layer)
         @unpack lateral, vertical, network = model
-        # update zi for vertical sbm and kinematic wave volume for river and land domain
+        # update zi for vertical sbm, subsurface volume and kinematic wave volume for river and land domain
         zi =
             max.(
                 0.0,
@@ -397,6 +398,10 @@ function initialize_sbm_model(config::Config)
                 vertical.satwaterdepth ./ (vertical.θₛ .- vertical.θᵣ),
             )
         vertical.zi .= zi
+        lateral.subsurface.volume .=
+            (lateral.subsurface.θₛ .- lateral.subsurface.θᵣ) .*
+            (lateral.subsurface.soilthickness .- (zi .* 0.001)) .* network.land.xl .*
+            network.land.yl
         if land_routing == "kinematic-wave"
             # make sure land cells with zero flow width are set to zero q and h
             for i in eachindex(lateral.land.width)
@@ -505,6 +510,7 @@ function update_until_recharge(model::Model{N,L,V,R,W,T}) where {N,L,V,R,W,T<:Sb
     # optional water demand and allocation
     if do_water_demand
         update_water_demand(vertical)
+        update_water_allocation(model)
     end
 
     # update vertical sbm concept until recharge [mm] to the saturated store
