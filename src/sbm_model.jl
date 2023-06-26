@@ -332,8 +332,7 @@ function initialize_sbm_model(config::Config)
         order = toposort,
         indices = inds,
         reverse_indices = rev_inds,
-        xl,
-        yl,
+        area = xl .* yl,
         slope = βₗ,
         indices_allocation_areas = inds_allocation_areas,
     )
@@ -400,8 +399,7 @@ function initialize_sbm_model(config::Config)
         vertical.zi .= zi
         lateral.subsurface.volume .=
             (lateral.subsurface.θₛ .- lateral.subsurface.θᵣ) .*
-            (lateral.subsurface.soilthickness .- (zi .* 0.001)) .* network.land.xl .*
-            network.land.yl
+            (lateral.subsurface.soilthickness .- (zi .* 0.001)) .* network.land.area
         if land_routing == "kinematic-wave"
             # make sure land cells with zero flow width are set to zero q and h
             for i in eachindex(lateral.land.width)
@@ -423,7 +421,7 @@ function initialize_sbm_model(config::Config)
                     j = network.land.index_river[i]
                     if lateral.land.h[i] > 0.0
                         lateral.land.volume[i] =
-                            lateral.land.h[i] * lateral.land.xl[i] * lateral.land.yl[i] +
+                            lateral.land.h[i] * lateral.land.area[i] +
                             lateral.river.bankfull_volume[j]
                     else
                         lateral.land.volume[i] =
@@ -433,7 +431,7 @@ function initialize_sbm_model(config::Config)
                     end
                 else
                     lateral.land.volume[i] =
-                        lateral.land.h[i] * lateral.land.xl[i] * lateral.land.yl[i]
+                        lateral.land.h[i] * lateral.land.area[i]
                 end
             end
         end
@@ -472,8 +470,7 @@ function update(model::Model{N,L,V,R,W,T}) where {N,L,V,R,W,T<:SbmModel}
     lateral.subsurface.recharge .= vertical.recharge ./ 1000.0
     if do_water_demand
         @. lateral.subsurface.recharge -=
-            vertical.waterallocation.act_groundwater_abst /
-            (network.land.xl * network.land.yl)
+            vertical.waterallocation.act_groundwater_abst / network.land.area
     end
     lateral.subsurface.recharge .*= lateral.subsurface.dw
     lateral.subsurface.zi .= vertical.zi ./ 1000.0
