@@ -355,6 +355,7 @@ function initialize_sbm_model(config::Config)
             order = toposort_riv,
             # water allocation areas
             indices_allocation_areas = inds_riv_allocation_areas,
+            area = xl[index_river] .* yl[index_river],
         )
     elseif river_routing == "local-inertial"
         river = (
@@ -430,8 +431,7 @@ function initialize_sbm_model(config::Config)
                             lateral.river.dl[j]
                     end
                 else
-                    lateral.land.volume[i] =
-                        lateral.land.h[i] * lateral.land.area[i]
+                    lateral.land.volume[i] = lateral.land.h[i] * lateral.land.area[i]
                 end
             end
         end
