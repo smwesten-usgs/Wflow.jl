@@ -65,7 +65,7 @@ function initialize_sbm_gwf_model(config::Config)
     nriv = length(inds_riv)
 
     # initialize vertical SBM concept
-    sbm = initialize_sbm(nc, config, riverfrac, inds, nriv)
+    sbm = initialize_sbm(nc, config, riverfrac, inds)
 
     # reservoirs
     pits = zeros(Bool, modelsize_2d)
