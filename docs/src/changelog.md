@@ -5,37 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+<<<<<<< HEAD
+## v0.7.1 - 2023-06-30
+
+### Fixed
+- State initialization of 1D floodplain `volume`. In the initialization function the wrong
+  field name of type `FloodPlainProfile` was used (`area` instead of `a`).
+
 ## v0.7.0 - 2023-06-12
+=======
+## [unreleased]
+>>>>>>> parent of 0e711362 (Merge branch 'master' into res-lake-sq)
 
 ### Fixed
 - `BMI.get_time_units` now gets called on the model rather than the type, like all other BMI
   functions, except `BMI.initialize`. Also it returns "s" instead of "seconds since
   1970-01-01T00:00:00", in line with the BMI specification.
-- Added the `interception` component to total actual evapotranspiration `actevap` of `SBM`
-  (was defined as the sum of soil evaporation, transpiration and open water evaporation).
 
 ### Changed
 - The time values returned in the BMI interface are no longer in seconds since 1970, but in
   seconds since the model start time. This is more in line with standard BMI practices.
-- The `starttime` was defined one model timestep `Δt` ahead of the actual model time (the
-  initial conditions timestamp (state time)). As a consequence this was also the case for
-  the current model time. To allow for an easier interpretation of Wflow time handling,
-  either through BMI or directly, the `starttime` is now equal to the state time, resulting
-  in current model times without an offset.
-- Using more than 8 threads can result in too much overhead with `Threads.@threads`. After
-  performance testing, this has been changed for kinematic wave routing and the vertical
-  `SBM` concept to spawning tasks with `Threads@spawn` for number of threads <= 8, where
-  each task iterates over a chunk of size `basesize`. For more than 8 threads the low
-  overhead threading `Polyester.@batch` (including the `minbatch` argument) is used. For
-  local inertial routing the use of `Threads.@threads` has been changed to threaded loop
-  vectorization (river and 1D floodplain local inertial momentum equation) and
-  `Polyester.@batch`.
 
 ### Added
 - For (regulated) lakes with rating curve of type 1 (H-Q table), lake `storage` above the
   `maximumstorage` (based on maximum water level from the H-Q table) is spilled
   instantaneously (overflow) from the lake.
-- Added support to use `sum` as a reducer function for csv and scalar output options.
 
 ## v0.6.3 - 2023-03-01
 

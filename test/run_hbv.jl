@@ -5,7 +5,8 @@ config = Wflow.Config(tomlpath)
 model = Wflow.initialize_hbv_model(config)
 @unpack network = model
 
-model = Wflow.run_timestep(model)
+Wflow.load_dynamic_input!(model)
+model = Wflow.update(model)
 
 # test if the first timestep was written to the CSV file
 flush(model.writer.csv_io)  # ensure the buffer is written fully to disk
@@ -27,7 +28,7 @@ end
 @testset "first timestep" begin
     hbv = model.vertical
     @test hbv.tt[4377] ≈ 0.0
-    @test model.clock.iteration == 1
+    @test model.clock.iteration == 2
     @test hbv.soilmoisture[4377] ≈ 134.35299682617188f0
     @test hbv.runoff[4377] ≈ 7.406898120121746f0
     @test hbv.soilevap[4377] == 0.0
@@ -35,7 +36,8 @@ end
 end
 
 # run the second timestep
-model = Wflow.run_timestep(model)
+Wflow.load_dynamic_input!(model)
+model = Wflow.update(model)
 
 @testset "second timestep" begin
     hbv = model.vertical

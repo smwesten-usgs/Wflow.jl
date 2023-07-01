@@ -18,7 +18,7 @@ config = Wflow.Config(tomlpath)
     @test dirname(config) == dirname(tomlpath)
 
     # test if the values are parsed as expected
-    @test config.starttime === DateTime(2000, 1, 1)
+    @test config.starttime === DateTime(2000, 1, 2)
     @test config.endtime === DateTime(2000, 2)
     @test config.output.path == "output_moselle.nc"
     @test config.output isa Wflow.Config
@@ -33,7 +33,7 @@ config = Wflow.Config(tomlpath)
     # modifiers can also be applied
     kvconf = Wflow.get_alias(config.input.vertical, "kv_0", "kv₀", nothing)
     @test kvconf isa Wflow.Config
-    ncname, modifier = Wflow.ncvar_name_modifier(kvconf, config=config)
+    ncname, modifier = Wflow.ncvar_name_modifier(kvconf, config = config)
     @test ncname === "KsatVer"
     @test modifier.scale == 1.0
     @test modifier.offset == 0.0
@@ -63,7 +63,7 @@ end
     # mock a NCReader object
     ncpath = Wflow.input_path(config, config.input.path_forcing)
     ds = NCDataset(ncpath)
-    reader = (; dataset=ds)
+    reader = (; dataset = ds)
 
     # if these keys are missing, they are derived from the NetCDF
     pop!(Dict(config), "starttime")
@@ -71,11 +71,11 @@ end
     pop!(Dict(config), "timestepsecs")
     clock = Wflow.Clock(config, reader)
 
-    @test clock.time == DateTimeProlepticGregorian(2000, 1, 1)
-    @test clock.iteration == 0
+    @test clock.time == DateTimeProlepticGregorian(2000, 1, 2)
+    @test clock.iteration == 1
     @test clock.Δt == Second(Day(1))
     # test that the missing keys have been added to the config
-    @test config.starttime == DateTime(2000, 1, 1)
+    @test config.starttime == DateTime(2000, 1, 2)
     @test config.endtime == DateTime(2001, 1, 1)
     @test config.timestepsecs == 86400
 
@@ -87,7 +87,7 @@ end
 
     clock = Wflow.Clock(config, reader)
     @test clock.time == DateTimeStandard(2003, 4, 5)
-    @test clock.iteration == 0
+    @test clock.iteration == 1
     @test clock.Δt == Second(Hour(1))
 
     close(ds)
@@ -98,17 +98,17 @@ end
     # 29 days in this February due to leap year
     starttime = DateTimeStandard(2000, 2, 28)
     Δt = Day(1)
-    clock = Wflow.Clock(starttime, 0, Second(Δt))
+    clock = Wflow.Clock(starttime, 1, Second(Δt))
 
     Wflow.advance!(clock)
     Wflow.advance!(clock)
     @test clock.time == DateTimeStandard(2000, 3, 1)
-    @test clock.iteration == 2
+    @test clock.iteration == 3
     @test clock.Δt == Δt
 
     Wflow.rewind!(clock)
     @test clock.time == DateTimeStandard(2000, 2, 29)
-    @test clock.iteration == 1
+    @test clock.iteration == 2
     @test clock.Δt == Δt
 
     config = Wflow.Config(
@@ -116,7 +116,7 @@ end
     )
     Wflow.reset_clock!(clock, config)
     @test clock.time == starttime
-    @test clock.iteration == 0
+    @test clock.iteration == 1
     @test clock.Δt == Δt
 end
 
@@ -124,17 +124,17 @@ end
     # 30 days in each month
     starttime = DateTime360Day(2000, 2, 29)
     Δt = Day(1)
-    clock = Wflow.Clock(starttime, 0, Second(Δt))
+    clock = Wflow.Clock(starttime, 1, Second(Δt))
 
     Wflow.advance!(clock)
     Wflow.advance!(clock)
     @test clock.time == DateTime360Day(2000, 3, 1)
-    @test clock.iteration == 2
+    @test clock.iteration == 3
     @test clock.Δt == Δt
 
     Wflow.rewind!(clock)
     @test clock.time == DateTime360Day(2000, 2, 30)
-    @test clock.iteration == 1
+    @test clock.iteration == 2
     @test clock.Δt == Δt
 
     config = Wflow.Config(
@@ -147,7 +147,7 @@ end
     Wflow.reset_clock!(clock, config)
     @test clock.time isa DateTime360Day
     @test string(clock.time) == "2020-02-29T00:00:00"
-    @test clock.iteration == 0
+    @test clock.iteration == 1
     @test clock.Δt == Δt
 end
 
@@ -193,7 +193,6 @@ config.input["path_forcing"] = abs_path_forcing
 @test isabspath(config.input.path_forcing)
 
 model = Wflow.initialize_sbm_model(config)
-Wflow.advance!(model.clock)
 Wflow.load_dynamic_input!(model)
 
 @unpack vertical, clock, reader, writer = model
@@ -232,12 +231,10 @@ end
 @testset "reducer" begin
     V = [6, 5, 4, 1]
     @test Wflow.reducerfunction("maximum")(V) == 6
-    @test Wflow.reducerfunction("minimum")(V) == 1
     @test Wflow.reducerfunction("mean")(V) == 4
     @test Wflow.reducerfunction("median")(V) == 4.5
     @test Wflow.reducerfunction("first")(V) == 6
     @test Wflow.reducerfunction("last")(V) == 1
-    @test Wflow.reducerfunction("sum")(V) == 16
     @test_throws ErrorException Wflow.reducerfunction("other")
 end
 
@@ -276,7 +273,6 @@ config.input.vertical.c = Dict(
 )
 
 model = Wflow.initialize_sbm_model(config)
-Wflow.advance!(model.clock)
 Wflow.load_dynamic_input!(model)
 
 @testset "changed parameter values" begin
@@ -292,7 +288,7 @@ Wflow.load_dynamic_input!(model)
     ]
 end
 
-Wflow.close_files(model, delete_output=false)
+Wflow.close_files(model, delete_output = false)
 
 @testset "NetCDF creation" begin
     path = Base.Filesystem.tempname()
@@ -321,17 +317,17 @@ end
         @test Wflow.internal_dim_name(:latitude) == :y
         @test Wflow.internal_dim_name(:time) == :time
 
-        @test_throws ArgumentError Wflow.read_dims(ds["c"], (x=:, y=:))
-        @test_throws ArgumentError Wflow.read_dims(ds["LAI"], (x=:, y=:))
-        data, data_dim_order = Wflow.read_dims(ds["wflow_dem"], (x=:, y=:))
+        @test_throws ArgumentError Wflow.read_dims(ds["c"], (x = :, y = :))
+        @test_throws ArgumentError Wflow.read_dims(ds["LAI"], (x = :, y = :))
+        data, data_dim_order = Wflow.read_dims(ds["wflow_dem"], (x = :, y = :))
         @test data isa Matrix{Union{Float32,Missing}}
         @test data[end, end] === missing
         @test data[125, 1] ≈ 647.187f0
         @test data_dim_order == (:x, :y)
 
-        @test Wflow.dim_directions(ds, (:x, :y)) === (x=true, y=false)
+        @test Wflow.dim_directions(ds, (:x, :y)) === (x = true, y = false)
         @test Wflow.dim_directions(ds, (:y, :x, :layer)) ===
-              (y=false, x=true, layer=true)
+              (y = false, x = true, layer = true)
 
         data, dims = Wflow.permute_data(zeros(1, 2, 3), (:layer, :y, :x))
         @test size(data) == (3, 2, 1)
@@ -343,17 +339,17 @@ end
 
         data = collect(reshape(1:6, (2, 3)))
         # flip y, which is the second dimension
-        @test Wflow.reverse_data!(data, (y=false, x=true))[1, :] == [5, 3, 1]
+        @test Wflow.reverse_data!(data, (y = false, x = true))[1, :] == [5, 3, 1]
         # and mutate it back, the NamedTuple order should not matter
-        @test Wflow.reverse_data!(data, (x=true, y=false))[1, :] == [1, 3, 5]
+        @test Wflow.reverse_data!(data, (x = true, y = false))[1, :] == [1, 3, 5]
         # flip both dimensions at the same time
-        data = Wflow.reverse_data!(data, (x=false, y=false))
+        data = Wflow.reverse_data!(data, (x = false, y = false))
         @test data[1, :] == [6, 4, 2]
         @test data[:, 1] == [6, 5]
 
-        data = Wflow.read_standardized(ds, "wflow_dem", (x=:, y=:))
+        data = Wflow.read_standardized(ds, "wflow_dem", (x = :, y = :))
         # since in this case only the second dimension needs reversing, we can easily do it manually
-        manual_fix = reverse(ds["wflow_dem"]; dims=2)
+        manual_fix = reverse(ds["wflow_dem"]; dims = 2)
         @test all(data .=== manual_fix)
     end
 end
@@ -364,7 +360,7 @@ end
     @test Wflow.parse_loglevel(0) == Logging.Info
 
     tomlpath = joinpath(@__DIR__, "sbm_simple.toml")
-    Wflow.run(tomlpath; silent=true)
+    Wflow.run(tomlpath; silent = true)
 
     config = Wflow.Config(tomlpath)
     output = normpath(abspath(Wflow.get(config, "dir_output", ".")))
@@ -433,11 +429,11 @@ end
     # test Clock{DateTimeNoLeap}
     clock = Wflow.Clock(config, reader)
     @test clock.time isa DateTimeNoLeap
-    @test clock.time == DateTimeNoLeap(2000, 1, 1)
+    @test clock.time == DateTimeNoLeap(2000, 1, 2)
 
     starttime = DateTimeNoLeap(2000, 2, 28)
     Δt = Day(1)
-    clock = Wflow.Clock(starttime, 0, Second(Δt))
+    clock = Wflow.Clock(starttime, 1, Second(Δt))
     Wflow.advance!(clock)
     @test clock.time == DateTimeNoLeap(2000, 3, 1)
 end

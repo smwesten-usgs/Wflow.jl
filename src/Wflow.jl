@@ -18,9 +18,6 @@ using TerminalLoggers
 using CFTime
 using Base.Threads
 using Glob
-using Polyester
-using LoopVectorization
-using IfElse
 
 @metadata get_units "mm Δt-1"
 
@@ -43,25 +40,17 @@ function Clock(config)
     calendar = get(config, "calendar", "standard")::String
     starttime = cftime(config.starttime, calendar)
     Δt = Second(config.timestepsecs)
-    Clock(starttime, 0, Δt)
+    Clock(starttime, 1, Δt)
 end
 
 function Clock(config, reader)
     nctimes = reader.dataset["time"][:]
-    
-    # if the timestep is not given, use the difference between NetCDF time 1 and 2
-    timestepsecs = get(config, "timestepsecs", nothing)
-    if timestepsecs === nothing
-        timestepsecs = Dates.value(Second(nctimes[2] - nctimes[1]))
-        config.timestepsecs = timestepsecs
-    end
-    Δt = Second(timestepsecs)
-    
-    # if the config file does not have a start or endtime, follow the NetCDF times
+    # if the config file does not have a start or endtime, folow the NetCDF times
     # and add them to the config
+    # if the timestep is not given, use the difference between NetCDF time 1 and 2
     starttime = get(config, "starttime", nothing)
     if starttime === nothing
-        starttime = first(nctimes) - Δt
+        starttime = first(nctimes)
         config.starttime = starttime
     end
     endtime = get(config, "endtime", nothing)
@@ -69,15 +58,22 @@ function Clock(config, reader)
         endtime = last(nctimes)
         config.endtime = endtime
     end
+    timestepsecs = get(config, "timestepsecs", nothing)
+    if timestepsecs === nothing
+        timestepsecs = Dates.value(Second(nctimes[2] - nctimes[1]))
+        config.timestepsecs = timestepsecs
+    end
 
     calendar = get(config, "calendar", "standard")::String
+    starttime = cftime(config.starttime, calendar)
+    Δt = Second(timestepsecs)
+
     fews_run = get(config, "fews_run", false)::Bool
     if fews_run
-        config.starttime = starttime + Δt
+        starttime = starttime + Δt
     end
-    starttime = cftime(config.starttime, calendar)
-    
-    Clock(starttime, 0, Δt)
+
+    Clock(starttime, 1, Δt)
 end
 
 include("io.jl")
@@ -196,16 +192,6 @@ function run(config::Config)
     run(model)
 end
 
-function run_timestep(model::Model; update_func = update, write_model_output = true)
-    advance!(model.clock)
-    load_dynamic_input!(model)
-    model = update_func(model)
-    if write_model_output
-        write_output(model)
-    end
-    return model
-end
-
 function run(model::Model; close_files = true)
     @unpack network, config, writer, clock = model
 
@@ -213,25 +199,24 @@ function run(model::Model; close_files = true)
 
     # determine timesteps to run
     calendar = get(config, "calendar", "standard")::String
-    @warn string(
-        "The definition of `starttime` has changed (equal to model state time).\n Please", 
-        " update your settings TOML file by subtracting one model timestep Δt from the", 
-        " `starttime`, if it was used with a Wflow version up to v0.6.3.",
-    )
     starttime = clock.time
     Δt = clock.Δt
     endtime = cftime(config.endtime, calendar)
-    times = range(starttime + Δt, endtime, step = Δt)
+    times = range(starttime, endtime, step = Δt)
 
     @info "Run information" model_type starttime Δt endtime nthreads()
     runstart_time = now()
     @progress for (i, time) in enumerate(times)
         @debug "Starting timestep." time i now()
-        model = run_timestep(model)
+        load_dynamic_input!(model)
+        model = update(model)
     end
     @info "Simulation duration: $(canonicalize(now() - runstart_time))"
 
     # write output state NetCDF
+    # undo the clock advance at the end of the last iteration, since there won't
+    # be a next step, and then the output state falls on the correct time
+    rewind!(clock)
     if haskey(config, "state") && haskey(config.state, "path_output")
         @info "Write output states to NetCDF file `$(model.writer.state_nc_path)`."
     end

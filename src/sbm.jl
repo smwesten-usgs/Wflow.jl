@@ -86,7 +86,7 @@
     ae_ustore::Vector{T}
     # Interception [mm Δt⁻¹]
     interception::Vector{T}
-    # Soil evaporation from unsaturated and saturated store [mm Δt⁻¹]
+    # Soil evaporation from unsaturated store [mm Δt⁻¹]
     soilevap::Vector{T}
     # Soil evaporation from saturated store [mm Δt⁻¹]
     soilevapsat::Vector{T}
@@ -610,7 +610,7 @@ function update_until_snow(sbm::SBM, config)
     modelglacier = get(config.model, "glacier", false)::Bool
     modelsnow = get(config.model, "snow", false)::Bool
 
-    threaded_foreach(1:sbm.n, basesize=1000) do i
+    @threads for i = 1:sbm.n
         if do_lai
             cmax = sbm.sl[i] * sbm.leaf_area_index[i] + sbm.swood[i]
             canopygapfraction = exp(-sbm.kext[i] * sbm.leaf_area_index[i])
@@ -694,7 +694,7 @@ function update_until_recharge(sbm::SBM, config)
     transfermethod = get(config.model, "transfermethod", false)::Bool
     ust = get(config.model, "whole_ust_available", false)::Bool # should be removed from optional setting and code?
 
-    threaded_foreach(1:sbm.n, basesize=250) do i
+    @threads for i = 1:sbm.n
         if modelsnow
             rainfallplusmelt = sbm.rainfallplusmelt[i]
             if modelglacier
@@ -933,7 +933,7 @@ function update_until_recharge(sbm::SBM, config)
         # recharge (mm) for saturated zone
         recharge = (transfer - actcapflux - actleakage - actevapsat - soilevapsat)
         transpiration = actevapsat + actevapustore
-        actevap = soilevap + transpiration + ae_openw_r + ae_openw_l + sbm.interception[i]
+        actevap = soilevap + transpiration + ae_openw_r + ae_openw_l
 
         # update the outputs and states
         sbm.n_unsatlayers[i] = n_usl
@@ -975,7 +975,7 @@ end
 
 function update_after_subsurfaceflow(sbm::SBM, zi, exfiltsatwater)
 
-    threaded_foreach(1:sbm.n, basesize=1000) do i
+    @threads for i = 1:sbm.n
         usl, n_usl = set_layerthickness(zi[i], sbm.sumlayers[i], sbm.act_thickl[i])
         # exfiltration from ustore
         usld = sbm.ustorelayerdepth[i]

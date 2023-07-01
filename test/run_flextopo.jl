@@ -5,7 +5,8 @@ config = Wflow.Config(tomlpath)
 model = Wflow.initialize_flextopo_model(config)
 @unpack network = model
 
-model = Wflow.run_timestep(model)
+Wflow.load_dynamic_input!(model)
+model = Wflow.update(model)
 
 # test if the first timestep was written to the CSV file
 flush(model.writer.csv_io)  # ensure the buffer is written fully to disk
@@ -27,7 +28,7 @@ end
 @testset "first timestep" begin
     flextopo = model.vertical
     @test flextopo.tt[3500] ≈ 1.3f0
-    @test model.clock.iteration == 1
+    @test model.clock.iteration == 2
     @test flextopo.rootzonestorage[3500] ≈
           [147.11238663084805f0, 79.08369375691255f0, 79.23637697443984f0]
     @test flextopo.runoff[3500] ≈ 0.19008129369467497f0
@@ -37,7 +38,8 @@ end
 end
 
 # run the second timestep
-model = Wflow.run_timestep(model)
+Wflow.load_dynamic_input!(model)
+model = Wflow.update(model)
 
 @testset "second timestep" begin
     flextopo = model.vertical
@@ -84,7 +86,8 @@ config["model"]["select_slow"] = ["common_slow_storage"]
 model = Wflow.initialize_flextopo_model(config)
 @unpack network = model
 
-model = Wflow.run_timestep(model)
+Wflow.load_dynamic_input!(model)
+model = Wflow.update(model)
 
 @testset "first timestep" begin
     flextopo = model.vertical

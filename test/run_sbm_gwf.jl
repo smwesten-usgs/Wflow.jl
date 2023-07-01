@@ -5,7 +5,8 @@ config = Wflow.Config(tomlpath)
 model = Wflow.initialize_sbm_gwf_model(config)
 @unpack network = model
 
-model = Wflow.run_timestep(model)
+Wflow.load_dynamic_input!(model)
+model = Wflow.update(model)
 
 # test if the first timestep was written to the CSV file
 flush(model.writer.csv_io)  # ensure the buffer is written fully to disk
@@ -20,7 +21,7 @@ end
 @testset "first timestep" begin
     sbm = model.vertical
 
-    @test model.clock.iteration == 1
+    @test model.clock.iteration == 2
     @test sbm.θₛ[1] ≈ 0.44999998807907104f0
     @test sbm.runoff[1] == 0.0
     @test sbm.soilevap[1] == 0.0
@@ -28,7 +29,8 @@ end
 end
 
 # run the second timestep
-model = Wflow.run_timestep(model)
+Wflow.load_dynamic_input!(model)
+model = Wflow.update(model)
 
 @testset "second timestep" begin
     sbm = model.vertical
