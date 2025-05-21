@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Case studies – Wflow.jl</title>
+<title>Introduction – Wflow.jl</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -19,6 +19,41 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -83,6 +118,35 @@ ul.task-list li input[type="checkbox"] {
   };
 </script>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="../_static/styles.css">
 </head>
@@ -270,7 +334,7 @@ ul.task-list li input[type="checkbox"] {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link active" href="../index.html" aria-current="page"> 
+    <a class="nav-link" href="../index.html"> 
 <span class="menu-text">Home</span></a>
   </li>  
   <li class="nav-item">
@@ -282,7 +346,7 @@ ul.task-list li input[type="checkbox"] {
 <span class="menu-text">User guide</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../model_docs/index.html"> 
+    <a class="nav-link active" href="../model_docs/index.html" aria-current="page"> 
 <span class="menu-text">Model documentation</span></a>
   </li>  
   <li class="nav-item">
@@ -328,7 +392,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../home/case_studies.html">Case studies</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../model_docs/parameters_intro.html">Model parameters and variables</a></li><li class="breadcrumb-item"><a href="../model_docs/parameters_intro.html">Introduction</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -342,28 +406,121 @@ ul.task-list li input[type="checkbox"] {
     <ul class="list-unstyled mt-1">
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../index.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Wflow.jl</span></a>
+  <a href="../model_docs/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">About</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../home/case_studies.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">Case studies</span></a>
+  <a href="../model_docs/model_configurations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Model configurations</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../home/publications.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Publications</span></a>
+  <a href="../model_docs/model_settings.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Model settings</span></a>
   </div>
 </li>
-        <li class="sidebar-item">
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#" role="navigation" aria-expanded="true">
+ <span class="menu-text">Land models</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../changelog.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Changelog</span></a>
+  <a href="../model_docs/land/landhydrology_sbm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Land Hydrology SBM</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../model_docs/land/sediment.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Sediment</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#" role="navigation" aria-expanded="true">
+ <span class="menu-text">Routing concepts</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../model_docs/routing/kinwave.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Kinematic wave</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../model_docs/routing/local-inertial.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Local inertial</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../model_docs/routing/waterbodies.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Reservoirs and Lakes</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../model_docs/routing/gwf.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Groundwater flow</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../model_docs/routing/sediment_flux.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Sediment flux</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#" role="navigation" aria-expanded="true">
+ <span class="menu-text">Model parameters and variables</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../model_docs/parameters_intro.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Introduction</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../model_docs/parameters_landhydrology_sbm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Land Hydrology SBM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../model_docs/parameters_sediment.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Land Sediment model</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../model_docs/parameters_routing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Routing concepts</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
     </ul>
     </div>
 </nav>
@@ -374,9 +531,8 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#wflow-models-for-the-meuse-and-rhine" id="toc-wflow-models-for-the-meuse-and-rhine" class="nav-link active" data-scroll-target="#wflow-models-for-the-meuse-and-rhine">Wflow models for the Meuse and Rhine</a></li>
-  <li><a href="#operational-flood-forecasting-in-australia" id="toc-operational-flood-forecasting-in-australia" class="nav-link" data-scroll-target="#operational-flood-forecasting-in-australia">Operational flood forecasting in Australia</a></li>
-  <li><a href="#simulating-plastic-transport-in-thailand" id="toc-simulating-plastic-transport-in-thailand" class="nav-link" data-scroll-target="#simulating-plastic-transport-in-thailand">Simulating plastic transport in Thailand</a></li>
+  <li><a href="#standard-names" id="toc-standard-names" class="nav-link active" data-scroll-target="#standard-names">Standard names</a></li>
+  <li><a href="#input-generic" id="toc-input-generic" class="nav-link" data-scroll-target="#input-generic">Generic input maps</a></li>
   </ul>
 </nav>
     </div>
@@ -384,9 +540,9 @@ ul.task-list li input[type="checkbox"] {
 <main class="content" id="quarto-document-content">
 
 
-<header id="title-block-header" class="quarto-title-block default">
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../model_docs/parameters_intro.html">Model parameters and variables</a></li><li class="breadcrumb-item"><a href="../model_docs/parameters_intro.html">Introduction</a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title">Case studies</h1>
+<h1 class="title">Introduction</h1>
 </div>
 
 
@@ -403,27 +559,56 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="wflow-models-for-the-meuse-and-rhine" class="level2">
-<h2 class="anchored" data-anchor-id="wflow-models-for-the-meuse-and-rhine">Wflow models for the Meuse and Rhine</h2>
-<p>Reliable hydrological models for the Rhine and the Meuse river basins are necessary for short-term forecasting of river flows and long-term predictions for strategic water management planning. In collaboration with Rijkswaterstaat, Deltares is developing a new line of models for the Rhine and the Meuse basins. The models will be used for forecasting and to estimate the impact of climate change on water resources and extreme streamflow. In the model development, we aim to improve hydrological predictions by including relevant processes in the model schematization. The modularity of the wflow framework is ideal for this as we can easily evaluate the combination of different vertical and lateral model components. For example, the local inertial routing for river and overland flow enables us to consider retention of water in the floodplains, which is likely to improve extreme streamflow predictions.</p>
-<p><img src="../images/case_rhine_meuse.png" class="img-fluid"></p>
+<p>This section provides an overview of all model parameters, states and variables in tables that can be exchanged (input and output) with standard names (subsection below) for:</p>
+<ul>
+<li><a href="../model_docs/parameters_landhydrology_sbm.html">The Land Hydrology SBM model</a>.</li>
+<li><a href="../model_docs/parameters_sediment.html">The Land Sediment model</a></li>
+<li><a href="../model_docs/parameters_routing.html">Routing concepts</a></li>
+</ul>
+<p>These tables include standard names, descriptions, units and default values (input parameters) for model parameters, states and variables. Note that a state variable can also be specified as a model output variable but is listed only in the states table and not in in the output table. The time unit of input flux parameters is day (the model base time step size), hence default values for these parameters are expressed per day. During model initialization these input parameters are converted to the user-defined model time step size Δt.</p>
+<section id="standard-names" class="level2">
+<h2 class="anchored" data-anchor-id="standard-names">Standard names</h2>
+<p>The standard names of model parameters, states and variables are based on <a href="https://csdms.colorado.edu/wiki/CSDMS_Standard_Names">CSDMS Standard Names</a>. These standard names are used in the TOML configuration file and mapped to internal model parameters, states and variables. Model output of model parameters (<code>[output]</code> section of TOML file) is not possible by providing standard names as these are only used for setting model parameters during model initialization, except for parameters that can also have cyclic input. These parameters are listed in tables below “Input static and cyclic” subsections (for <a href="../model_docs/parameters_landhydrology_sbm.html#input-cyclic-lai">example</a>). To output model parameters and variables without a standard name one to one mapping (dot notation) can be used in the TOML configuration file, but this is not considered as part of the public API, e.g.:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode toml code-with-copy"><code class="sourceCode toml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[output.netcdf_grid.variables]</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="dt">land.interception.variables.canopy_storage</span> <span class="op">=</span> <span class="st">"canopystorage"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Standard names that contain <code>instantaneous</code> in the <code>quantity</code> part of the standard name can be valid for an internal time step (for example for kinematic wave routing an internal time step is optional (and recommended), with a time step equal to the model simulation time step the standard name nonetheless contains <code>instantaneous</code>) and thus considered instantaneous compared to the model simulation time step Δt <span class="math inline">\(\SIb{}{s}\)</span>. Standard names can contain a tilde that are used to distinguish nouns and adjectives in the <code>object</code> part of the standard name. These standard names should be quoted in the TOML configuration file, e.g.:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode toml code-with-copy"><code class="sourceCode toml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[input.static]</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="dt">"soil~compacted__area_fraction".value</span> <span class="op">=</span> <span class="fl">0.2</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
-<section id="operational-flood-forecasting-in-australia" class="level2">
-<h2 class="anchored" data-anchor-id="operational-flood-forecasting-in-australia">Operational flood forecasting in Australia</h2>
-<p>In Australia, there was a need for high-resolution, fast and accurate rainfall-runoff models to provide boundary conditions for a fast and detailed flood inundation model (SFINCS). The domain of the flood model covers the entire North and East Coast of Australia. Although many gauging stations are available to provide real-time information, many rivers are not covered. For these locations, wflow_sbm models are used to provide this real-time information. Additionally, these models are used to provide projections for potential future scenarios. Using the HydroMT library, all wflow_sbm models were automatically built. The high level of flexibility in spatial and temporal resolution, combined with the physics-based nature of the concept, makes Wflow_sbm particularly suitable for ungauged basins. Furthermore, the model is detailed and computationally efficient enough for coupling with the fast flood inundation model SFINCS.</p>
-<p><img src="../images/case_flifs_1.png" class="img-fluid"></p>
-<p>The results of this proof of concept are very promising. Technically, we were able to quickly set up the wflow_sbm models, couple them to the flood inundation models (SFINCS), and run the models operationally under the Delft-FEWS platform. Model validation was conducted for two basins by comparing the results of Wflow_sbm against observations and the results of calibrated URBS models. This validation demonstrated that the uncalibrated Wflow_sbm model results were already quite satisfactory, especially given the complex nature of these basins, which include several small and large reservoirs. We could also show the potential for further calibration by adjusting the KsatHorFrac parameter.</p>
-<p>De Kleermaeker, S., Leijnse, T., Morales, Y., Druery, C., &amp; Maguire, S. (2022). Developing a real-time data and modelling framework for operational flood inundation forecasting in Australia. In Hydrology &amp; Water Resources Symposium 2022 (HWRS 2022): The Past, the Present, the Future. Engineers Australia. https://search.informit.org/doi/10.3316/informit.916755150845355</p>
-<p><img src="../images/case_flifs_2.png" class="img-fluid"></p>
-</section>
-<section id="simulating-plastic-transport-in-thailand" class="level2">
-<h2 class="anchored" data-anchor-id="simulating-plastic-transport-in-thailand">Simulating plastic transport in Thailand</h2>
-<p>For the Pollution Control Board of the Government of Thailand and the World Bank, we supported a material flow analysis of plastics in Thailand using wflow. Plastic pollution is a growing global issue. Plastic waste enters rivers and is transported to the ocean where it persists and threatens the health of the ocean, seas and coasts. The initial movement of plastic waste is in many cases triggered by runoff from (heavy) rainfall and transported by water flow towards small streams and rivers. Therefore there is strong relation to rainfall-runoff processes, which can be modeled using high-resolution rainfall-runoff models.</p>
-<p>In this study we applied the wflow_sbm model in combination with a fate-and-transport and water quality model (DelWaq) to simulate the movement of plastics through five large river basins and on three island and coastal zones (Krabi, Phuket, and Ko Samui; see screenshot of the model below) in Thailand. Together with our partners Panya Consultants and HII, we were able to identify hotspots of plastic pollution, estimate how much plastic waste would end up in the Gulf of Thailand and recommend priority areas for reducing plastic waste reaching the sea.</p>
-<p><img src="../images/case_mfa_1.png" class="img-fluid"></p>
-<p>The wflow_sbm models for the five large basins were calibrated. The presence of large dams and reservoirs complicated calibration, but with the input for the dam operation, the model performance for these basins could be largely improved. The figure below shows the calibrated model results for the Chao Phraya, just upstream of Bangkok. The input from the hydrological wflow_sbm model was used as input for the fate and transport model to assess the amount of plastic transported to the ocean.</p>
-<p><img src="../images/case_mfa_3.png" class="img-fluid"></p>
-<p>Link to World Bank report: <a href="https://www.worldbank.org/en/country/thailand/publication/plastic-waste-material-flow-analysis-for-thailand">https://www.worldbank.org/en/country/thailand/publication/plastic-waste-material-flow-analysis-for-thailand</a></p>
+<section id="input-generic" class="level2">
+<h2 class="anchored" data-anchor-id="input-generic">Generic input maps</h2>
+<p>The table below lists static input maps that are not directly part of wflow models and are required to run wflow.</p>
+<table class="table-striped table-hover caption-top table">
+<thead>
+<tr class="header">
+<th>Standard Name</th>
+<th>Description</th>
+<th>Unit</th>
+<th>Default value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>basin__local_drain_direction</code></td>
+<td>Local drain direction (1-9)</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr class="even">
+<td><code>subbasin_location__count</code></td>
+<td>Subbasin ids</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr class="odd">
+<td><code>river_location__mask</code></td>
+<td>River mask (0-1)</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p>For lake and reservoir generic input see <a href="../model_docs/parameters_routing.html#input-generic-lake">lake-input</a> and <a href="../model_docs/parameters_routing.html#input-generic-reservoir">reservoir-input</a>, respectively.</p>
 
 
 </section>
